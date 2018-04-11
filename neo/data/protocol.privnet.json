@@ -1,27 +1,27 @@
 {
   "ProtocolConfiguration": {
-    "Magic": 56753,
+    "Magic": 99999998,
     "AddressVersion": 23,
     "StandbyValidators": [
-        "02b3622bf4017bdfe317c58aed5f4c753f206b7db896046fa7d774bbc4bf7f8dc2",
-        "02103a7f7dd016558597f7960d27c516a4394fd968b9e65155eb4b013e4040406e",
-        "03d90c07df63e690ce77912e10ab51acc944b66860237b608c4f8f8309e71ee699",
-        "02a7bc55fe8684e0119768d104ba30795bdcc86619e864add26156723ed185cd62"
+      "037c67b33855edf15ec14c151e49ca99e46c94a3584a9cf24b0918f742a078ab0c",
+      "03a76a8d57d9d0ff1bf9cb1952c77ed7bb16c84f838cc3ca67f81809fad5843ae3",
+      "02797d4e9c20e1f284e5a84ed25d4d8caf68ed5e0d7cb32bc5995cacddaa82e9c6",
+      "03df836d7eaed69a3ea773c3cb4313abf743da67a3310e635f89dbc6cbd17f15dc"
     ],
     "SeedList": [
-        "127.0.0.1:20333",
-        "127.0.0.1:20334",
-        "127.0.0.1:20335",
-        "127.0.0.1:20336"
+      "ec2-54-210-150-207.compute-1.amazonaws.com:10333",
+      "ec2-54-88-239-37.compute-1.amazonaws.com:10333",
+      "ec2-54-87-155-20.compute-1.amazonaws.com:10333",
+      "ec2-54-172-121-105.compute-1.amazonaws.com:10333"
     ],
     "RPCList":[
-      "http://127.0.0.1:30333"
+      "http://ec2-54-210-150-207.compute-1.amazonaws.com:10332"
     ],
     "SystemFee": {
-        "EnrollmentTransaction": 1000,
-        "IssueTransaction": 500,
-        "PublishTransaction": 500,
-        "RegisterTransaction": 10000
+        "EnrollmentTransaction": 0,
+        "IssueTransaction": 0,
+        "PublishTransaction": 0,
+        "RegisterTransaction": 0
     }
   },
 
