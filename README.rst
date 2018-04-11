@@ -27,9 +27,19 @@ To run this using docker on your, attached to all code's private network, run th
 
 - cd <neo-python-git-folder>
 - ``docker build -f Dockerfile -t neopython .`` (This will take a long while)
-- Once build is done you can either run it so you can connect thru bash, or you can run the server api. To run the server API
-    - To run the server api ``docker run -it -p 8080:8080 -v $(pwd):/neo-python -h neopython --name neopython neopython``
-    - To run the bash command line ``docker run -it -p 8080:8080 -v $(pwd):/neo-python -h neopython --name neopython neopython /bin/bash``
+- Once build is done you can either run it so you can connect thru bash, this mut be done to update the current folder to have the pip installation.
+- To run the bash command line ``docker run -it -p 8080:8080 -v $(pwd):/neo-python -h neopython --name neopython neopython /bin/bash``
+- When you are inside the vm, run ``pip3 install -e .``
+
+Development Cycle
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Once this has finished, you are ready to run the server, development cycle goes like this.
+
+- Run the  container with ``docker run -it -p 8080:8080 -v $(pwd):/neo-python -h neopython --name neopython neopython /bin/bash``.
+- Run the API server with ``np-api-server --privnet --port-rest 8080``
+- If you make changes to the code, do ctrl+c to stop the server and re-run it with the previous command.
+- If you need to shutdown the container or your machine, do ``docker stop neopython``, or just exit from the bash of the vm.
+- To connect again, do ``docker start neopython`` then ``docker attach neopython``. You can re run the server. This cycle is important unless you are willing to be redoing the sync every time.
 
 
 Overview
