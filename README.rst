@@ -20,6 +20,17 @@ Python Node and SDK for the NEO blockchain.
     :alt: Coveralls
 
 
+All Code
+--------
+
+To run this using docker on your, attached to all code's private network, run this:
+
+- cd <neo-python-git-folder>
+- ``docker build -f Dockerfile -t neopython .`` (This will take a long while)
+- Once build is done you can either run it so you can connect thru bash, or you can run the server api. To run the server API
+    - To run the server api ``docker run -it -p 8080:8080 -v $(pwd):/neo-python -h neopython --name neopython neopython``
+    - To run the bash command line ``docker run -it -p 8080:8080 -v $(pwd):/neo-python -h neopython --name neopython neopython /bin/bash``
+
 
 Overview
 --------
