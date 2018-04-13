@@ -15,6 +15,9 @@ from neocore.UInt160 import UInt160
 from neocore.UInt256 import UInt256
 from neo.Settings import settings
 from neo.api.utils import cors_header
+from Crypto import Random
+from neocore.KeyPair import KeyPair
+import binascii
 
 
 API_URL_PREFIX = "/v1"
@@ -206,6 +209,20 @@ class RestApi(object):
             'current_height': Blockchain.Default().Height,
             'version': settings.VERSION_NAME,
             'num_peers': len(NodeLeader.Instance().Peers)
+        }, indent=4, sort_keys=True)
+
+    @app.route('%s/wallet/new' % API_URL_PREFIX, methods=['POST'])
+    @cors_header
+    def new_wallet(self, request):
+        request.setHeader('Content-Type', 'application/json')
+        private_key = bytes(Random.get_random_bytes(32))
+        key = KeyPair(priv_key=private_key)
+        return json.dumps({
+            'public_key': str(key.PublicKey.encode_point(True), 'utf-8'),
+            'public_key_hash': key.PublicKeyHash.ToString(),
+            'private_key': key.PrivateKey.hex(),
+            'wif': key.Export(),
+            'address': key.GetAddress()
         }, indent=4, sort_keys=True)
 
     def format_notifications(self, request, notifications, show_none=False):
