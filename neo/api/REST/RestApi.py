@@ -10,13 +10,22 @@ from logzero import logger
 
 from neo.Network.NodeLeader import NodeLeader
 from neo.Implementations.Notifications.LevelDB.NotificationDB import NotificationDB
+from neo.Core.State.AccountState import AccountState
 from neo.Core.Blockchain import Blockchain
+from neo.Core.Helper import Helper
 from neocore.UInt160 import UInt160
 from neocore.UInt256 import UInt256
 from neo.Settings import settings
 from neo.api.utils import cors_header
+from neo.Prompt.Utils import parse_param
 from Crypto import Random
 from neocore.KeyPair import KeyPair
+from decimal import Decimal
+from neo.Prompt.Commands.Invoke import TestInvokeContract, test_invoke
+from neo.SmartContract.ApplicationEngine import ApplicationEngine
+from neo.SmartContract.ContractParameter import ContractParameter
+from neo.VM.ScriptBuilder import ScriptBuilder
+from neo.VM.VMState import VMStateStr
 import binascii
 
 
@@ -26,7 +35,7 @@ API_URL_PREFIX = "/v1"
 class RestApi(object):
     app = Klein()
     notif = None
-
+    decimals = 1;
     def __init__(self):
         self.notif = NotificationDB.instance()
 
@@ -201,6 +210,50 @@ class RestApi(object):
 
         return self.format_notifications(request, notifications)
 
+    @app.route('%s/accountstate/<string:key_wallet>' % API_URL_PREFIX, methods=['GET'])
+    @cors_header
+    def get_accountstate(self, request, key_wallet):
+        request.setHeader('Content-Type', 'application/json')
+        try:
+            print(key_wallet)
+            acct = Blockchain.Default().GetAccountState(key_wallet)
+            print(acct.ToJson())
+            if acct is None:
+                try:
+                    acct = AccountState(script_hash=Helper.AddrStrToScriptHash(key_wallet))
+                except Exception as e:
+                    self.format_message("Could not get contract with hash %s because test" % (key_wallet))
+
+            acctString = json.dumps(acct.ToJson())
+            acctString = acctString.replace("0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b", "NEO")
+            acctString = acctString.replace("0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7", "GAS")
+            return json.dumps({'response':json.loads(acctString)})
+        except Exception as e:
+            return self.format_message("Could not get contract with hash %s because %s " % (acct.ToJson(), e))
+
+        return self.format_message("Could not get contract with hash %s because test" % (key_wallet))
+
+    @app.route('%s/get_token_balance/<string:hash_value>/<string:address_contract>' % API_URL_PREFIX, methods=['GET'])
+    @cors_header
+    def get_token_balance(self, request, hash_value,address_contract):
+        request.setHeader('Content-Type', 'application/json')
+        try:
+            print(address_contract)
+            addr = parse_param(address_contract)
+            if isinstance(addr, UInt160):
+                addr = addr.Data
+            sb = ScriptBuilder()
+            sb.EmitAppCallWithOperationAndArgs(UInt160.ParseString(hash_value), 'balanceOf', [addr])
+            response = self.get_invoke_result_balance(sb.ToArray())
+
+            return json.dumps(response)
+
+        except Exception as e:
+            #    logger.info("Could not get contract with hash %s because %s " % (contract_hash, e))
+            return self.format_message("Could not get balance with hash %s because %s " % (hash_value, e))
+        # return self.format_notifications(request, notifications)
+        return self.format_message("Could not get balance with hash %s because test" % (hash_value))
+
     @app.route('%s/status' % API_URL_PREFIX, methods=['GET'])
     @cors_header
     def get_status(self, request):
@@ -262,3 +315,16 @@ class RestApi(object):
             'page': 0,
             'page_len': 0
         }, indent=4, sort_keys=True)
+
+    def get_invoke_result_balance(self, script):
+
+        appengine = ApplicationEngine.Run(script=script)
+        val = appengine.EvaluationStack.Items[0].GetBigInteger()
+        balance = Decimal(val)
+        return {
+            "script": script.decode('utf-8'),
+            "state": VMStateStr(appengine.State),
+            "gas_consumed": appengine.GasConsumed().ToString(),
+            "stack": [ContractParameter.ToParameter(item).ToJson() for item in appengine.EvaluationStack.Items],
+            "balance": str(balance)
+        }
