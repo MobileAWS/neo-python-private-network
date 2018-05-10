@@ -52,11 +52,18 @@ class RestApi(object):
             <li><pre>{apiPrefix}/tokens</pre><em>lists all NEP5 Tokens</em></li>
             <li><pre>{apiPrefix}/token/&lt;contract_hash&gt;</pre><em>list an NEP5 Token</em></li>
             <li><pre>{apiPrefix}/status</pre> <em>current block height and version</em></li>
+            <li><pre>{apiPrefix}/accountstate/&lt;key_wallet&gt;/</pre> <em>contains account information and balance sheet data</em></li>
+            <li><pre>{apiPrefix}/get_token_balance/&lt;hash_value&gt;/&lt;address_contract&gt;/</pre> <em>get balance from addres and contract</em></li>
+            <li><pre>{apiPrefix}/wallet/new/</pre> <em>create a new wallet</em></li>
+            <li><pre>{apiPrefix}/get_data_from_wif/&lt;wif&gt;</pre> <em>return data from wif</em></li>
         </ul>
         """.format(apiPrefix=API_URL_PREFIX)
 
         return """<html>
+                    <head>
+                    <title>Coupit Middleware Api</title>
                     <style>body {padding:20px;max-width:800px;pre { background-color:#eee; }</style>
+                    </head>
                     <body>
                         <p>
                             <h2>REST API for NEO %s</h2>
@@ -235,7 +242,7 @@ class RestApi(object):
 
     @app.route('%s/get_token_balance/<string:hash_value>/<string:address_contract>' % API_URL_PREFIX, methods=['GET'])
     @cors_header
-    def get_token_balance(self, request, hash_value,address_contract):
+    def get_token_balance(self, request, hash_value, address_contract):
         request.setHeader('Content-Type', 'application/json')
         try:
             print(address_contract)
@@ -278,6 +285,25 @@ class RestApi(object):
             'address': key.GetAddress()
         }, indent=4, sort_keys=True)
 
+    @app.route('%s/get_data_from_wif/<string:wif>' % API_URL_PREFIX, methods=['GET'])
+    @cors_header
+    def get_data_from_wif(self, request, wif):
+        request.setHeader('Content-Type', 'application/json')
+        try:
+            print("get_data_from_wif ", wif)
+            private_key = KeyPair.PrivateKeyFromWIF(wif)
+            key = KeyPair(priv_key=private_key)
+            return json.dumps({
+                'public_key': str(key.PublicKey.encode_point(True), 'utf-8'),
+                'public_key_hash': key.PublicKeyHash.ToString(),
+                'private_key': key.PrivateKey.hex(),
+                'wif': key.Export(),
+                'address': key.GetAddress()
+            }, indent=4, sort_keys=True)
+        except Exception as e:
+            return self.format_message("Error: Could not get data from wif %s " % (wif))
+        return self.format_message("Could not get data from wif %s " % (wif))
+
     def format_notifications(self, request, notifications, show_none=False):
         notif_len = len(notifications)
         page_len = 500
@@ -317,7 +343,6 @@ class RestApi(object):
         }, indent=4, sort_keys=True)
 
     def get_invoke_result_balance(self, script):
-
         appengine = ApplicationEngine.Run(script=script)
         val = appengine.EvaluationStack.Items[0].GetBigInteger()
         balance = Decimal(val)
